@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <cstdlib>
 /*
  * Как только температура снаружи падает ниже 0 °С, надо включить систему обогрева водопровода.
  * Если температура снаружи поднялась выше 5 °С, то систему обогрева водопровода нужно отключить.
@@ -15,7 +16,13 @@
    Разумеется, это изменение должно происходить, если свет сейчас включён. В 00:00 температура сбрасывается до 5000К.
  */
 //Включение датчика switches_state |= HEATERS, отключение датчика switches_state &= ~HEATERS.
+float parsing_kelvin(std::string a) {
+    std::string tempo = " ";
+    for (int i = 0; i < 2; i++) {
+        tempo += a[i];
+    }
 
+}
 enum switches
 {
     LIGHTS_INSIDE = 1,
@@ -28,6 +35,7 @@ enum switches
 
 int main() {
    std::stringstream readings;
+   float kelvin = 5000;
    int water_heating = 0, lights_outside = 0, heaters = 0, conditioner = 0;
    std::string  instruction, moving, time, power_supply, temp_out, temp_inside, lights_inside, outlets;
    std::cout << "Enter the readings of all sensors:\n";
@@ -58,19 +66,34 @@ int main() {
    }
    else if (!(lights_outside & LIGHTS_OUTSIDE)) {
         std::cout << "Yard lighting is off\n";
-    }
-    if (std::stoi(temp_inside) < 22) {
-        heaters |= HEATERS;
-    }
-    else if (std::stoi(temp_inside) >= 25) {
-        heaters &= ~HEATERS;
-    }
-    else if (std::stoi(temp_inside) == 30) {
-        conditioner |= CONDITIONER;
-    }
-    else if (std::stoi(temp_inside) == 25) {
-        conditioner &= ~CONDITIONER;
-    }
+   }
+   if (std::stoi(temp_inside) < 22) {
+       heaters |= HEATERS;
+   }
+   else if (std::stoi(temp_inside) >= 25) {
+       heaters &= ~HEATERS;
+   }
+   else if (std::stoi(temp_inside) == 30) {
+       conditioner |= CONDITIONER;
+   }
+   else if (std::stoi(temp_inside) == 25) {
+       conditioner &= ~CONDITIONER;
+   }
+   if (heaters & HEATERS) {
+       std::cout << "Heating is on! \n";
+   }
+   else if (!((heaters & HEATERS))) {
+       std::cout << "The heating is off! \n";
+   }
+   if (conditioner & CONDITIONER) {
+       std::cout << "The air conditioner is on! \n";
+   }
+   else if (!((conditioner & CONDITIONER))) {
+       std::cout << "The air conditioner is off! \n";
+   }
+   if (power_supply == "on") {
+
+   }
 
 
     return 0;
