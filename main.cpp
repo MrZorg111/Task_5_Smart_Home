@@ -1,27 +1,20 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <cstdlib>
-/*
- * Как только температура снаружи падает ниже 0 °С, надо включить систему обогрева водопровода.
- * Если температура снаружи поднялась выше 5 °С, то систему обогрева водопровода нужно отключить.
- *Если на дворе вечер (время больше 16:00 и меньше 5:00 утра) и снаружи есть какое-то движение, то необходимо включить садовое освещение.
-   Если движения нет или время не вечернее, то света снаружи быть не должно.
-Если температура в помещении упала ниже 22 °С, должно включиться отопление.
-   Как только температура равна или поднимается выше 25 °С, отопление автоматически отключается.
-   Если температура в помещении поднялась до 30 °С, включается кондиционер. Как только температура становится 25 °С, кондиционер отключается.
 
-   Всё освещение в доме также умное и поддерживает настройку цветовой температуры для комфортного нахождения.
-   Каждый день начиная с 16:00 и до 20:00 температура цвета должна плавно изменяться с 5000K до 2700К.
-   Разумеется, это изменение должно происходить, если свет сейчас включён. В 00:00 температура сбрасывается до 5000К.
- */
-//Включение датчика switches_state |= HEATERS, отключение датчика switches_state &= ~HEATERS.
-float parsing_kelvin(std::string a) {
-    std::string tempo = " ";
-    for (int i = 0; i < 2; i++) {
-        tempo += a[i];
+float kelvin(std::string a) {
+    std::string tempo_f;
+    float tempo_h;
+    for (int i = 0; i < 5; i++) {
+        if (i != 2) {
+            tempo_f += a[i];
+        }
+        if (i == 2) {
+            tempo_h = (std::stof(tempo_f) - 16) * 60;
+            tempo_f = "";
+        }
     }
-
+    return 5000 - ((tempo_h + std::stof(tempo_f)) * 9.58);
 }
 enum switches
 {
@@ -30,19 +23,20 @@ enum switches
     HEATERS = 4,
     WATER_PIPE_HEATING = 8,
     CONDITIONER = 16,
-    OUTLETS = 32
 };
 
 int main() {
    std::stringstream readings;
-   float kelvin = 5000;
-   int water_heating = 0, lights_outside = 0, heaters = 0, conditioner = 0;
-   std::string  instruction, moving, time, power_supply, temp_out, temp_inside, lights_inside, outlets;
-   std::cout << "Enter the readings of all sensors:\n";
+   int water_heating = 0, lights_outside = 0, heaters = 0, conditioner = 0, lights_inside = 0;
+   std::string  instruction, moving, time, power_supply, temp_out, temp_inside;
+   std::cout << "Enter the data: "
+                "Time, outdoor temperature, "
+                "indoor temperature, the presence of light in the room (on/off), "
+                "the presence of traffic in the yard (yes/no).\n";
    std::getline(std::cin, instruction);
    readings << instruction;
    readings >> time >> temp_out >> temp_inside >> power_supply >> moving;
-   std::cout << time << " " << temp_out << " " << temp_inside << " " << power_supply << " " << moving << "\n";
+
    if (std::stoi(temp_out) < 0) {
       water_heating |= WATER_PIPE_HEATING;
    }
@@ -73,7 +67,7 @@ int main() {
    else if (std::stoi(temp_inside) >= 25) {
        heaters &= ~HEATERS;
    }
-   else if (std::stoi(temp_inside) == 30) {
+   if (std::stoi(temp_inside) == 30) {
        conditioner |= CONDITIONER;
    }
    else if (std::stoi(temp_inside) == 25) {
@@ -92,9 +86,22 @@ int main() {
        std::cout << "The air conditioner is off! \n";
    }
    if (power_supply == "on") {
-
+       lights_inside |= LIGHTS_INSIDE;
    }
-
-
-    return 0;
+   if (lights_inside & LIGHTS_INSIDE) {
+        std::cout << "The lights are on!\n";
+        if (time < "16:00" && time >= "00:00") {
+            std::cout << "Color temperature 5000 Kelvin.";
+        }
+        else if (time > "16:00" && time < "20:00") {
+            std::cout << "Color temperature: " << kelvin(time) << "Kelvin.";
+        }
+        else if (time >= "20:00" && time < "00:00") {
+            std::cout << "Color temperature 2700 Kelvin.";
+        }
+   }
+   else if (!(lights_inside & LIGHTS_INSIDE)) {
+       std::cout << "The lights are off.";
+   }
+ return 0;
 }
